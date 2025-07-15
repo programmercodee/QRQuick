@@ -2,10 +2,42 @@ import React, { useRef, useState } from "react";
 import { FaQrcode, FaTimes, FaCamera, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { Html5Qrcode } from "html5-qrcode";
 
+function parseQRFields(val) {
+  // Try to parse common QR types for preview
+  if (/^WIFI:T:.*;S:.*;P:.*;/i.test(val)) {
+    const m = val.match(/^WIFI:T:(.*?);S:(.*?);P:(.*?);/i);
+    if (m) return { type: 'WiFi', fields: { SSID: m[2], Password: m[3], Security: m[1] } };
+  }
+  if (/^mailto:/i.test(val)) {
+    const mail = val.match(/^mailto:([^?]+)(\?(.+))?/i);
+    if (mail) {
+      const params = {};
+      if (mail[3]) mail[3].split('&').forEach(p => { const [k, v] = p.split('='); params[k] = decodeURIComponent(v || ''); });
+      return { type: 'Email', fields: { Email: mail[1], Subject: params.subject || '', Body: params.body || '' } };
+    }
+  }
+  if (/^sms:/i.test(val)) {
+    const sms = val.match(/^sms:(\+?\d+)(\?body=(.*))?/i);
+    if (sms) return { type: 'SMS', fields: { Phone: sms[1], Message: sms[3] || '' } };
+  }
+  if (/BEGIN:VCARD/i.test(val)) {
+    const name = (val.match(/FN:(.*)/i) || [])[1] || '';
+    const phone = (val.match(/TEL.*:(.*)/i) || [])[1] || '';
+    const email = (val.match(/EMAIL.*:(.*)/i) || [])[1] || '';
+    const org = (val.match(/ORG:(.*)/i) || [])[1] || '';
+    return { type: 'vCard', fields: { Name: name, Phone: phone, Email: email, Organization: org } };
+  }
+  if (/^https?:\/\//i.test(val)) {
+    return { type: 'Website', fields: { URL: val } };
+  }
+  return { type: 'Raw', fields: { Value: val } };
+}
+
 export default function QRScanner({ onResult, onClose }) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
+  const [preview, setPreview] = useState(null);
   const scannerRef = useRef(null);
   const html5Qr = useRef(null);
   const unmounted = useRef(false);
@@ -14,18 +46,16 @@ export default function QRScanner({ onResult, onClose }) {
     try {
       if (html5Qr.current) {
         await html5Qr.current.stop().catch(() => { });
-        // Only clear if the DOM node is still present
         const el = document.getElementById("qr-reader");
         if (el) html5Qr.current.clear();
       }
-    } catch (e) {
-      // Ignore errors
-    }
+    } catch (e) { }
   };
 
   const startScan = async () => {
     setError("");
     setResult("");
+    setPreview(null);
     setScanning(true);
     if (scannerRef.current) scannerRef.current.innerHTML = "";
     await safeStopAndClear();
@@ -38,6 +68,7 @@ export default function QRScanner({ onResult, onClose }) {
         (decoded) => {
           if (unmounted.current) return;
           setResult(decoded);
+          setPreview(parseQRFields(decoded));
           setScanning(false);
           safeStopAndClear();
           if (onResult) onResult(decoded);
@@ -84,6 +115,18 @@ export default function QRScanner({ onResult, onClose }) {
           <h2 className="text-lg font-bold text-blue-700">Scan QR Code</h2>
         </div>
         <div ref={scannerRef} id="qr-reader" className="w-full max-w-xs min-h-[180px] rounded-xl border border-blue-100 bg-blue-50/40 mb-2" />
+        {/* Live preview of scanned content */}
+        {scanning && preview && (
+          <div className="w-full mt-3 p-3 rounded-xl bg-blue-50 border border-blue-100 text-left animate-fade-in">
+            <div className="font-semibold text-blue-700 mb-1">Scanned Preview:</div>
+            <div className="text-xs text-gray-700 break-all mb-1">{preview.type}</div>
+            <ul className="text-sm text-gray-800 space-y-1">
+              {Object.entries(preview.fields).map(([k, v]) => (
+                <li key={k}><span className="font-medium text-blue-600">{k}:</span> {v}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {result && (
           <div className="flex items-center gap-2 mt-2 text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
             <FaCheckCircle />

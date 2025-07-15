@@ -178,7 +178,51 @@ const QRGenerator = ({ lang, t, onQRStateChange }) => {
         {/* QR Scanner Modal/Section */}
         {showScanner && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in">
-            <QRScanner onResult={val => { setText(val); setShowScanner(false); }} onClose={() => setShowScanner(false)} />
+            <QRScanner onResult={val => {
+              let handled = false;
+              if (templateType === 'text') {
+                setText(val);
+                handled = true;
+              } else if (templateType === 'website') {
+                setTemplateData({ url: val });
+                handled = true;
+              } else if (templateType === 'wifi') {
+                // WiFi:WIFI:T:WPA;S:SSID;P:password;;
+                const m = val.match(/^WIFI:T:(.*?);S:(.*?);P:(.*?);/i);
+                if (m) {
+                  setTemplateData({ ssid: m[2], password: m[3] });
+                  handled = true;
+                }
+              } else if (templateType === 'email') {
+                // mailto:email?subject=...&body=...
+                const mail = val.match(/^mailto:([^?]+)(\?(.+))?/i);
+                if (mail) {
+                  const params = {};
+                  if (mail[3]) mail[3].split('&').forEach(p => { const [k, v] = p.split('='); params[k] = decodeURIComponent(v || ''); });
+                  setTemplateData({ email: mail[1], subject: params.subject || '', body: params.body || '' });
+                  handled = true;
+                }
+              } else if (templateType === 'sms') {
+                // sms:1234567890?body=Hello
+                const sms = val.match(/^sms:(\+?\d+)(\?body=(.*))?/i);
+                if (sms) {
+                  setTemplateData({ phone: sms[1], message: sms[3] || '' });
+                  handled = true;
+                }
+              } else if (templateType === 'vcard') {
+                // BEGIN:VCARD ...
+                if (/BEGIN:VCARD/i.test(val)) {
+                  const name = (val.match(/FN:(.*)/i) || [])[1] || '';
+                  const phone = (val.match(/TEL.*:(.*)/i) || [])[1] || '';
+                  const email = (val.match(/EMAIL.*:(.*)/i) || [])[1] || '';
+                  const org = (val.match(/ORG:(.*)/i) || [])[1] || '';
+                  setTemplateData({ name, phone, email, org });
+                  handled = true;
+                }
+              }
+              if (!handled) setText(val);
+              setShowScanner(false);
+            }} onClose={() => setShowScanner(false)} />
           </div>
         )}
         {/* Section Divider */}
