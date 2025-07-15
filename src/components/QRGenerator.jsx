@@ -6,7 +6,7 @@ import QROptions from "./QROptions";
 import QRDisplay from "./QRDisplay";
 import QRScanner from "./QRScanner";
 import { generateTemplateText, validateFields } from "./utils";
-import { FaQrcode, FaMagic, FaEdit, FaRegIdCard, FaWifi, FaCalendarAlt, FaGlobe, FaEnvelope, FaUserFriends, FaLink, FaSms } from "react-icons/fa";
+import { FaQrcode, FaMagic, FaEdit, FaRegIdCard, FaWifi, FaCalendarAlt, FaGlobe, FaEnvelope, FaUserFriends, FaLink, FaSms, FaTimes } from "react-icons/fa";
 
 const TEMPLATES = [
   {
@@ -65,6 +65,7 @@ const QRGenerator = ({ lang, t, onQRStateChange }) => {
   const [activeTab, setActiveTab] = useState("generate");
   const [showOptions, setShowOptions] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Initialize QR instance
   useEffect(() => {
@@ -150,12 +151,18 @@ const QRGenerator = ({ lang, t, onQRStateChange }) => {
           <p className="text-blue-400 text-base sm:text-lg mt-1 font-medium animate-fade-in">{t('generate')}</p>
         </div>
         {/* Tab Bar for QR Types */}
-        <div className="w-full sticky top-0 z-30 flex flex-row justify-start gap-2 sm:gap-4 mb-2 overflow-x-auto px-2 sm:px-4 py-2 rounded-xl bg-white/80 backdrop-blur border border-blue-100 shadow animate-fade-in scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent"
-          style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}>
+        <div className="w-full flex flex-row flex-nowrap overflow-x-auto scrollbar-hide-mobile md:flex-wrap md:overflow-x-visible justify-start gap-2 sm:gap-4 mb-2 px-2 sm:px-4 py-2 rounded-xl bg-white/80 backdrop-blur border border-blue-100 shadow animate-fade-in relative">
+          <button
+            className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-blue-700 bg-gradient-to-r from-cyan-100 to-blue-100 border border-blue-200 shadow hover:bg-blue-200 transition mb-2 md:mb-0 shrink-0"
+            onClick={() => setShowScanner(true)}
+            type="button"
+          >
+            <FaQrcode className="text-xl" /> Scan QR
+          </button>
           {QR_TYPES.map(type => (
             <button
               key={type.key}
-              className={`flex flex-col items-center min-w-[96px] px-4 sm:px-6 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all border-2 duration-200 ${templateType === type.key ? 'border-blue-500 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 shadow-lg scale-105' : 'border-transparent text-gray-400 bg-white hover:text-blue-500 hover:scale-105'}`}
+              className={`flex flex-col items-center min-w-[96px] px-4 sm:px-6 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all border-2 duration-200 shrink-0 ${templateType === type.key ? 'border-blue-500 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 shadow-lg scale-105' : 'border-transparent text-gray-400 bg-white hover:text-blue-500 hover:scale-105'}`}
               onClick={() => {
                 setTemplateType(type.key);
                 setTemplateData({});
@@ -167,9 +174,17 @@ const QRGenerator = ({ lang, t, onQRStateChange }) => {
               <span className="mt-1 whitespace-nowrap">{type.label}</span>
             </button>
           ))}
-          {/* Fade-out effect for overflow */}
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white/90 to-transparent z-40" />
         </div>
+        {/* QR Scanner Modal/Section */}
+        {showScanner && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-md relative animate-fade-in">
+              <button className="absolute top-2 right-2 text-gray-400 hover:text-blue-500" onClick={() => setShowScanner(false)}><FaTimes size={24} /></button>
+              <h3 className="text-lg font-bold mb-3 text-blue-700 flex items-center gap-2"><FaQrcode /> Scan QR Code</h3>
+              <QRScanner onResult={val => { setText(val); setShowScanner(false); }} />
+            </div>
+          </div>
+        )}
         {/* Section Divider */}
         <div className="w-full h-px bg-gradient-to-r from-blue-100 via-blue-400 to-blue-100 my-2" />
         {/* Form Fields */}

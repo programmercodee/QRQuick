@@ -16,15 +16,16 @@
   animation: fab-glow 2s infinite;
 }
 
-/* Hide scrollbar thumb for all scrollable elements */
-::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
-  background: transparent;
-}
+/* Tailwind utility: Hide scrollbar only on mobile */
+@media (max-width: 640px) {
+  .scrollbar-hide-mobile::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent;
+  }
 
-/* For Firefox */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  .scrollbar-hide-mobile {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }
