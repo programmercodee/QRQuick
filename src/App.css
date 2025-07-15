@@ -1,0 +1,185 @@
+body {
+  min-height: 100vh;
+  background: linear-gradient(270deg, #e0e7ff, #f0fdfa, #c7d2fe, #a7f3d0, #e0e7ff);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 60%, #e0e7ff 100%);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 0 0 #60a5fa;
+  border-radius: 2rem;
+  border: 1.5px solid rgba(96, 165, 250, 0.13);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s, border 0.3s;
+}
+
+.qr-card:hover {
+  box-shadow: 0 16px 48px 0 rgba(31, 38, 135, 0.22), 0 2.5px 0 0 #60a5fa;
+  border: 1.5px solid #60a5fa55;
+}
+
+.qr-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #60a5fa, #a7f3d0, #60a5fa);
+  z-index: 2;
+}
+
+.qr-title {
+  background: linear-gradient(90deg, #2563eb, #06b6d4, #22d3ee);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px #a7f3d088;
+}
+
+.qr-section {
+  background: rgba(240, 249, 255, 0.5);
+  border-radius: 1rem;
+  padding: 1.2rem 1rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 1px 8px 0 rgba(96, 165, 250, 0.06);
+}
+
+.qr-divider {
+  height: 1px;
+  background: linear-gradient(90deg, #e0e7ff 0%, #60a5fa 50%, #e0e7ff 100%);
+  border: none;
+  margin: 1.5rem 0;
+}
+
+.qr-style-toggle {
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.3s;
+  box-shadow: 0 2px 8px #60a5fa22;
+}
+
+.qr-style-toggle[aria-expanded="true"] {
+  background: linear-gradient(90deg, #60a5fa 60%, #a7f3d0 100%);
+  color: #fff;
+  transform: scale(1.04) rotate(-2deg);
+}
+
+.qr-style-toggle:active {
+  transform: scale(0.98);
+}
+
+.qr-style-options {
+  transition: max-height 0.5s cubic-bezier(.4, 2, .6, 1), opacity 0.3s;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 16px #60a5fa22;
+}
+
+.qr-glow {
+  box-shadow: 0 0 32px 0 #60a5fa55, 0 0 80px 0 #a7f3d033;
+  animation: qrGlowPulse 2.5s infinite alternate;
+}
+
+@keyframes qrGlowPulse {
+  from {
+    box-shadow: 0 0 32px 0 #60a5fa55, 0 0 80px 0 #a7f3d033;
+  }
+
+  to {
+    box-shadow: 0 0 48px 0 #38bdf855, 0 0 120px 0 #a7f3d055;
+  }
+}
+
+.qr-fade-in {
+  animation: qrFadeIn 0.7s cubic-bezier(.4, 2, .6, 1);
+}
+
+@keyframes qrFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.qr-btn {
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.qr-btn:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, #a7f3d0 0%, #60a5fa 100%);
+  opacity: 0.18;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+  z-index: 0;
+}
+
+.qr-btn:hover:after {
+  width: 220%;
+  height: 220%;
+}
+
+.qr-btn:active {
+  transform: scale(0.97);
+}
+
+.qr-btn span,
+.qr-btn svg {
+  position: relative;
+  z-index: 1;
+}
+
+.qr-error {
+  animation: qrErrorIn 0.4s;
+}
+
+@keyframes qrErrorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
