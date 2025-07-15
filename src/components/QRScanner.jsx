@@ -1,33 +1,66 @@
 import React, { useRef, useState } from "react";
 import { FaQrcode, FaTimes, FaCamera, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 
 export default function QRScanner({ onResult, onClose }) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
   const scannerRef = useRef(null);
+  const html5Qr = useRef(null);
+  const unmounted = useRef(false);
 
-  const startScan = () => {
+  const safeStopAndClear = async () => {
+    try {
+      if (html5Qr.current) {
+        await html5Qr.current.stop().catch(() => { });
+        // Only clear if the DOM node is still present
+        const el = document.getElementById("qr-reader");
+        if (el) html5Qr.current.clear();
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  };
+
+  const startScan = async () => {
     setError("");
     setResult("");
     setScanning(true);
     if (scannerRef.current) scannerRef.current.innerHTML = "";
-    const scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
-    scanner.render(
-      (decoded) => {
-        setResult(decoded);
+    await safeStopAndClear();
+    if (unmounted.current) return;
+    html5Qr.current = new Html5Qrcode("qr-reader");
+    html5Qr.current
+      .start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decoded) => {
+          if (unmounted.current) return;
+          setResult(decoded);
+          setScanning(false);
+          safeStopAndClear();
+          if (onResult) onResult(decoded);
+        },
+        (err) => {
+          // Don't set error on every frame; only show scanning state
+        }
+      )
+      .catch((err) => {
+        if (unmounted.current) return;
+        setError("Camera error: " + (err?.message || err));
         setScanning(false);
-        scanner.clear();
-        if (onResult) onResult(decoded);
-      },
-      (err) => {
-        setError("No QR code detected. Try again.");
-        setScanning(false);
-        scanner.clear();
-      }
-    );
+      });
   };
+
+  // Clean up camera on close/unmount
+  React.useEffect(() => {
+    unmounted.current = false;
+    return () => {
+      unmounted.current = true;
+      safeStopAndClear();
+    };
+  }, []);
 
   // Close on Escape
   React.useEffect(() => {
@@ -39,7 +72,10 @@ export default function QRScanner({ onResult, onClose }) {
   return (
     <div className="w-full max-w-md mx-auto relative" role="dialog" aria-modal="true">
       {/* Close button */}
-      <button onClick={onClose} aria-label="Close scanner" className="absolute top-2 right-2 text-gray-400 hover:text-blue-500 text-2xl z-10"><FaTimes /></button>
+      <button onClick={async () => {
+        await safeStopAndClear();
+        if (onClose) onClose();
+      }} aria-label="Close scanner" className="absolute top-2 right-2 text-gray-400 hover:text-blue-500 text-2xl z-10"><FaTimes /></button>
       {/* Animated accent bar */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500 animate-pulse rounded-t-2xl" />
       <div className="flex flex-col items-center justify-center p-4 pt-6 pb-2 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-100">
