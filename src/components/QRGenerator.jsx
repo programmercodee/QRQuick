@@ -178,11 +178,7 @@ const QRGenerator = ({ lang, t, onQRStateChange }) => {
         {/* QR Scanner Modal/Section */}
         {showScanner && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-md relative animate-fade-in">
-              <button className="absolute top-2 right-2 text-gray-400 hover:text-blue-500" onClick={() => setShowScanner(false)}><FaTimes size={24} /></button>
-              <h3 className="text-lg font-bold mb-3 text-blue-700 flex items-center gap-2"><FaQrcode /> Scan QR Code</h3>
-              <QRScanner onResult={val => { setText(val); setShowScanner(false); }} />
-            </div>
+            <QRScanner onResult={val => { setText(val); setShowScanner(false); }} onClose={() => setShowScanner(false)} />
           </div>
         )}
         {/* Section Divider */}
